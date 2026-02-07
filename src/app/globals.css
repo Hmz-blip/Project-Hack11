@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #000000;
+  --color-foreground: #ededed;
+  
+  --color-primary: #8b5cf6; /* Violet 500 */
+  --color-primary-foreground: #ffffff;
+  
+  --color-secondary: #18181b; /* Zinc 900 */
+  --color-secondary-foreground: #fafafa;
+  
+  --color-accent: #d946ef; /* Fuchsia 500 */
+  --color-accent-foreground: #ffffff;
+
+  --color-muted: #27272a; /* Zinc 800 */
+  --color-muted-foreground: #a1a1aa; /* Zinc 400 */
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-float: float 6s ease-in-out infinite;
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10;
+  }
+  .glass-card {
+    @apply bg-black/40 backdrop-blur-xl border border-white/10 shadow-xl;
+  }
+  .text-glow {
+    text-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+body {
+  @apply bg-background text-foreground antialiased selection:bg-primary/30;
+}
