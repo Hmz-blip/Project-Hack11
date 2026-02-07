@@ -66,7 +66,7 @@ export function VibeInput({ onVibeSubmit, isLoading }: VibeInputProps) {
 
             {!user && (
                 <div className="text-center mt-4">
-                    <a href="/api/auth/login" className="text-sm text-neutral-400 hover:text-primary transition-colors">
+                    <a href="/auth/login" className="text-sm text-neutral-400 hover:text-primary transition-colors">
                         Login to start vibing →
                     </a>
                 </div>
