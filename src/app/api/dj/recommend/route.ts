@@ -1,5 +1,6 @@
 
 import { NextResponse } from 'next/server';
+// @ts-ignore
 import { getSession } from '@auth0/nextjs-auth0';
 import OpenAI from 'openai';
 import YtDlpWrap from 'yt-dlp-exec';
