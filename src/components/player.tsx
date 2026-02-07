@@ -24,6 +24,7 @@ export function Player({ playlist, onNext }: PlayerProps) {
     if (!mounted || playlist.length === 0) return null;
 
     const currentId = playlist[currentTrackIndex];
+    const ReactPlayerAny = ReactPlayer as any;
 
     // Handle moving to next track when one ends
     const handleEnded = () => {
@@ -43,7 +44,7 @@ export function Player({ playlist, onNext }: PlayerProps) {
             <div className="glass-card p-4 w-full max-w-3xl pointer-events-auto flex items-center gap-4">
                 {/* Hidden Player for Logic */}
                 <div className="hidden">
-                    <ReactPlayer
+                    <ReactPlayerAny
                         url={`https://www.youtube.com/watch?v=${currentId}`}
                         playing={playing}
                         onEnded={handleEnded}
