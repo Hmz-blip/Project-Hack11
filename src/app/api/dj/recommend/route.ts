@@ -1,26 +1,43 @@
 
 import { NextResponse } from 'next/server';
+import { auth0 } from '@/lib/auth0';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import path from 'path';
 // @ts-ignore
-import { getSession } from '@auth0/nextjs-auth0';
-import OpenAI from 'openai';
-import YtDlpWrap from 'yt-dlp-exec';
+import * as ytDlpExec from 'yt-dlp-exec';
 
-// Initialize OpenAI
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
-export const runtime = 'nodejs'; // Ensure Node.js runtime for yt-dlp spawning
-export const maxDuration = 30; // Allow 30 seconds for LLM + Search
+export const maxDuration = 30; // 30 seconds max duration for Vercel Free Tier (or Pro default)
 export const dynamic = 'force-dynamic';
+
+// Workaround for Next.js 14+ bundling issue where __dirname is mocked to /
+const getYtDlpWrap = () => {
+    try {
+        const binPath = path.resolve(process.cwd(), 'node_modules/yt-dlp-exec/bin/yt-dlp');
+        // @ts-ignore
+        const create = ytDlpExec.create || ytDlpExec.default.create || ytDlpExec.default;
+
+        if (typeof ytDlpExec.create === 'function') {
+            return ytDlpExec.create(binPath);
+        }
+        return ytDlpExec.default || ytDlpExec;
+    } catch (e) {
+        console.error("Failed to initialize yt-dlp wrapper:", e);
+        return ytDlpExec.default || ytDlpExec;
+    }
+};
+
+const YtDlpWrap = getYtDlpWrap();
+
 
 export async function POST(req: Request) {
     try {
         // 1. Authentication
-        const session = await getSession();
-        const user = session?.user;
-
-        if (!user) {
+        const session = await auth0.getSession();
+        if (!session || !session.user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -35,18 +52,12 @@ export async function POST(req: Request) {
         // 2. LLM Translation (Vibe -> Search Query)
         let searchQuery = vibe;
         try {
-            const completion = await openai.chat.completions.create({
-                model: "gpt-3.5-turbo",
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are a professional DJ. Convert the user's vibe description into a specific YouTube search query that yields the best music video results. Return ONLY the search query, nothing else. Example: 'chill lo-fi' -> 'lofi hip hop radio - beats to relax/study to'"
-                    },
-                    { role: "user", content: vibe }
-                ],
-                max_tokens: 50,
-            });
-            searchQuery = completion.choices[0].message.content?.trim() || vibe;
+            const prompt = `You are a professional DJ. Convert the user's vibe description into a specific YouTube search query that yields the best music video results. Return ONLY the search query, nothing else. Example: 'chill lo-fi' -> 'lofi hip hop radio - beats to relax/study to'. User's vibe: ${vibe}`;
+
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            searchQuery = response.text().trim() || vibe;
+
             console.log(`[DJ] Generated Query: ${searchQuery}`);
         } catch (llmError) {
             console.error("LLM Error, falling back to raw vibe:", llmError);
