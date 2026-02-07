@@ -10,6 +10,8 @@ const openai = new OpenAI({
 });
 
 export const runtime = 'nodejs'; // Ensure Node.js runtime for yt-dlp spawning
+export const maxDuration = 30; // Allow 30 seconds for LLM + Search
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
     try {
